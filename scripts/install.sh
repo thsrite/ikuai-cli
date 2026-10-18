@@ -2,13 +2,13 @@
 # ikuai-cli installer — downloads the latest (or pinned) release binary.
 #
 # Usage:
-#   curl -fsSL https://raw.githubusercontent.com/ikuaidev/ikuai-cli/main/scripts/install.sh | sh
+#   curl -fsSL https://raw.githubusercontent.com/thsrite/ikuai-cli/main/scripts/install.sh | sh
 #   curl -fsSL ... | sh -s -- --version v0.1.0
 #   curl -fsSL ... | sh -s -- --dir ~/.local/bin
 
 set -eu
 
-REPO="ikuaidev/ikuai-cli"
+REPO="thsrite/ikuai-cli"
 BINARY="ikuai-cli"
 INSTALL_DIR="${HOME}/.local/bin"
 VERSION=""

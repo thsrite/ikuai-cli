@@ -49,7 +49,7 @@ func SaveBackup(apiPath, id string, record json.RawMessage) (string, error) {
 
 // LoadBackup reads one backup file.
 func LoadBackup(file string) (*Backup, error) {
-	data, err := os.ReadFile(file)
+	data, err := os.ReadFile(file) //nolint:gosec // reading the backup file the user named is the purpose
 	if err != nil {
 		return nil, err
 	}

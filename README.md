@@ -1,9 +1,9 @@
 # ikuai-cli
 
-[![CI](https://github.com/ikuaidev/ikuai-cli/actions/workflows/ci.yml/badge.svg)](https://github.com/ikuaidev/ikuai-cli/actions/workflows/ci.yml)
-[![Release](https://img.shields.io/github/v/release/ikuaidev/ikuai-cli)](https://github.com/ikuaidev/ikuai-cli/releases)
-[![Go Version](https://img.shields.io/github/go-mod/go-version/ikuaidev/ikuai-cli)](go.mod)
-[![Go Report Card](https://goreportcard.com/badge/github.com/ikuaidev/ikuai-cli)](https://goreportcard.com/report/github.com/ikuaidev/ikuai-cli)
+[![CI](https://github.com/thsrite/ikuai-cli/actions/workflows/ci.yml/badge.svg)](https://github.com/thsrite/ikuai-cli/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/thsrite/ikuai-cli)](https://github.com/thsrite/ikuai-cli/releases)
+[![Go Version](https://img.shields.io/github/go-mod/go-version/thsrite/ikuai-cli)](go.mod)
+[![Go Report Card](https://goreportcard.com/badge/github.com/thsrite/ikuai-cli)](https://goreportcard.com/report/github.com/thsrite/ikuai-cli)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 A CLI for iKuai routers — manage network, users, VPN, firewall and more from the terminal.
@@ -22,36 +22,32 @@ A CLI for iKuai routers — manage network, users, VPN, firewall and more from t
 **macOS / Linux:**
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/ikuaidev/ikuai-cli/main/scripts/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/thsrite/ikuai-cli/main/scripts/install.sh | sh
 ```
 
-**Go install:**
-
-```bash
-go install github.com/ikuaidev/ikuai-cli/cmd/ikuai-cli@latest
-```
+> `go install` is not available for this fork: the Go module path is unchanged, so it would build upstream. Use the installer above, a release binary, or build from source.
 
 <details>
 <summary>Other install methods</summary>
 
-**Pre-built binary:** download from [GitHub Releases](https://github.com/ikuaidev/ikuai-cli/releases).
+**Pre-built binary:** download from [GitHub Releases](https://github.com/thsrite/ikuai-cli/releases).
 
 ```bash
 VERSION=0.1.0 ARCH=linux_amd64
 # ARM32 Linux uses ARCH=linux_armv7
-curl -fsSL "https://github.com/ikuaidev/ikuai-cli/releases/download/v${VERSION}/ikuai-cli_${ARCH}.tar.gz" -o ikuai-cli.tar.gz
-curl -fsSL "https://github.com/ikuaidev/ikuai-cli/releases/download/v${VERSION}/checksums.txt" -o checksums.txt
+curl -fsSL "https://github.com/thsrite/ikuai-cli/releases/download/v${VERSION}/ikuai-cli_${ARCH}.tar.gz" -o ikuai-cli.tar.gz
+curl -fsSL "https://github.com/thsrite/ikuai-cli/releases/download/v${VERSION}/checksums.txt" -o checksums.txt
 sha256sum --check --ignore-missing checksums.txt
 tar -xzf ikuai-cli.tar.gz
 sudo mv ikuai-cli /usr/local/bin/
 ```
 
-Windows: download `ikuai-cli_windows_amd64.zip` from [Releases](https://github.com/ikuaidev/ikuai-cli/releases).
+Windows: download `ikuai-cli_windows_amd64.zip` from [Releases](https://github.com/thsrite/ikuai-cli/releases).
 
 **Build from source:**
 
 ```bash
-git clone https://github.com/ikuaidev/ikuai-cli.git
+git clone https://github.com/thsrite/ikuai-cli.git
 cd ikuai-cli
 make build
 ```
@@ -183,7 +179,7 @@ ikuai-cli ships with a [`SKILL.md`](./SKILL.md) and domain-specific [skills](./s
 **[Skills CLI](https://github.com/vercel-labs/skills) (Recommended):**
 
 ```bash
-npx skills add ikuaidev/ikuai-cli
+npx skills add thsrite/ikuai-cli
 ```
 
 | Flag | Description |
@@ -196,7 +192,7 @@ npx skills add ikuaidev/ikuai-cli
 
 ```bash
 mkdir -p .agents/skills
-git clone https://github.com/ikuaidev/ikuai-cli.git .agents/skills/ikuai-cli
+git clone https://github.com/thsrite/ikuai-cli.git .agents/skills/ikuai-cli
 ```
 
 ### Agent Output
@@ -213,7 +209,7 @@ Use `--format yaml` for token-efficient output when full JSON fidelity is not re
 ## Development
 
 ```bash
-git clone https://github.com/ikuaidev/ikuai-cli.git
+git clone https://github.com/thsrite/ikuai-cli.git
 cd ikuai-cli
 make test       # run all tests (with race detector)
 make lint       # golangci-lint
@@ -230,7 +226,7 @@ make darwin-amd64   make darwin-arm64
 
 ## Community
 
-- [Issues](https://github.com/ikuaidev/ikuai-cli/issues) — bug reports and feature requests
+- [Issues](https://github.com/thsrite/ikuai-cli/issues) — bug reports and feature requests
 - [Contributing](CONTRIBUTING.md) — how to contribute
 - [Security](SECURITY.md) — how to report vulnerabilities
 - [Code of Conduct](CODE_OF_CONDUCT.md)

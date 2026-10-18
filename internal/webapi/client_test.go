@@ -1,7 +1,7 @@
 package webapi
 
 import (
-	"crypto/md5"
+	"crypto/md5" //nolint:gosec // mirrors the iKuai web login protocol
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
@@ -49,7 +49,7 @@ func (f *fakeRouter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewDecoder(r.Body).Decode(&body)
 	switch r.URL.Path {
 	case "/Action/login":
-		sum := md5.Sum([]byte("pw"))
+		sum := md5.Sum([]byte("pw")) //nolint:gosec // mirrors the iKuai web login protocol
 		if body["username"] != "admin" || body["passwd"] != hex.EncodeToString(sum[:]) ||
 			body["pass"] != base64.StdEncoding.EncodeToString([]byte("salt_11pw")) {
 			_ = json.NewEncoder(w).Encode(map[string]interface{}{"Result": 30000, "message": "bad"})

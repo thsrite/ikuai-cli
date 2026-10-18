@@ -1,9 +1,9 @@
 # ikuai-cli
 
-[![CI](https://github.com/ikuaidev/ikuai-cli/actions/workflows/ci.yml/badge.svg)](https://github.com/ikuaidev/ikuai-cli/actions/workflows/ci.yml)
-[![Release](https://img.shields.io/github/v/release/ikuaidev/ikuai-cli)](https://github.com/ikuaidev/ikuai-cli/releases)
-[![Go Version](https://img.shields.io/github/go-mod/go-version/ikuaidev/ikuai-cli)](go.mod)
-[![Go Report Card](https://goreportcard.com/badge/github.com/ikuaidev/ikuai-cli)](https://goreportcard.com/report/github.com/ikuaidev/ikuai-cli)
+[![CI](https://github.com/thsrite/ikuai-cli/actions/workflows/ci.yml/badge.svg)](https://github.com/thsrite/ikuai-cli/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/thsrite/ikuai-cli)](https://github.com/thsrite/ikuai-cli/releases)
+[![Go Version](https://img.shields.io/github/go-mod/go-version/thsrite/ikuai-cli)](go.mod)
+[![Go Report Card](https://goreportcard.com/badge/github.com/thsrite/ikuai-cli)](https://goreportcard.com/report/github.com/thsrite/ikuai-cli)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 iKuai 路由器命令行工具 — 在终端管理网络、用户、VPN、防火墙等
@@ -15,36 +15,32 @@ iKuai 路由器命令行工具 — 在终端管理网络、用户、VPN、防火
 **macOS / Linux：**
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/ikuaidev/ikuai-cli/main/scripts/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/thsrite/ikuai-cli/main/scripts/install.sh | sh
 ```
 
-**Go install：**
-
-```bash
-go install github.com/ikuaidev/ikuai-cli/cmd/ikuai-cli@latest
-```
+> 本 fork 不能用 `go install` 安装：Go 模块路径没有改，会装成上游版本。请用上面的安装脚本、Release 二进制或源码编译。
 
 <details>
 <summary>其他安装方式</summary>
 
-**预编译二进制：** 从 [Releases 页面](https://github.com/ikuaidev/ikuai-cli/releases) 下载。
+**预编译二进制：** 从 [Releases 页面](https://github.com/thsrite/ikuai-cli/releases) 下载。
 
 ```bash
 VERSION=0.1.0 ARCH=linux_amd64
 # ARM32 Linux 使用 ARCH=linux_armv7
-curl -fsSL "https://github.com/ikuaidev/ikuai-cli/releases/download/v${VERSION}/ikuai-cli_${ARCH}.tar.gz" -o ikuai-cli.tar.gz
-curl -fsSL "https://github.com/ikuaidev/ikuai-cli/releases/download/v${VERSION}/checksums.txt" -o checksums.txt
+curl -fsSL "https://github.com/thsrite/ikuai-cli/releases/download/v${VERSION}/ikuai-cli_${ARCH}.tar.gz" -o ikuai-cli.tar.gz
+curl -fsSL "https://github.com/thsrite/ikuai-cli/releases/download/v${VERSION}/checksums.txt" -o checksums.txt
 sha256sum --check --ignore-missing checksums.txt
 tar -xzf ikuai-cli.tar.gz
 sudo mv ikuai-cli /usr/local/bin/
 ```
 
-Windows：从 [Releases](https://github.com/ikuaidev/ikuai-cli/releases) 下载 `ikuai-cli_windows_amd64.zip`。
+Windows：从 [Releases](https://github.com/thsrite/ikuai-cli/releases) 下载 `ikuai-cli_windows_amd64.zip`。
 
 **从源码编译：**
 
 ```bash
-git clone https://github.com/ikuaidev/ikuai-cli.git
+git clone https://github.com/thsrite/ikuai-cli.git
 cd ikuai-cli
 make build
 ```
@@ -176,7 +172,7 @@ ikuai-cli 内置 [`SKILL.md`](./SKILL.md) 和领域 [skills](./skills/)，让 AI
 **[Skills CLI](https://github.com/vercel-labs/skills)（推荐）：**
 
 ```bash
-npx skills add ikuaidev/ikuai-cli
+npx skills add thsrite/ikuai-cli
 ```
 
 | 参数 | 说明 |
@@ -189,7 +185,7 @@ npx skills add ikuaidev/ikuai-cli
 
 ```bash
 mkdir -p .agents/skills
-git clone https://github.com/ikuaidev/ikuai-cli.git .agents/skills/ikuai-cli
+git clone https://github.com/thsrite/ikuai-cli.git .agents/skills/ikuai-cli
 ```
 
 ### Agent 输出
@@ -206,7 +202,7 @@ ikuai-cli users online --format json | jq '.data[] | {id, ip_addr, mac, username
 ## 开发
 
 ```bash
-git clone https://github.com/ikuaidev/ikuai-cli.git
+git clone https://github.com/thsrite/ikuai-cli.git
 cd ikuai-cli
 make test       # 运行测试（含竞态检测）
 make lint       # golangci-lint 代码检查
@@ -223,7 +219,7 @@ make darwin-amd64   make darwin-arm64
 
 ## 社区
 
-- [Issues](https://github.com/ikuaidev/ikuai-cli/issues) — Bug 报告与功能建议
+- [Issues](https://github.com/thsrite/ikuai-cli/issues) — Bug 报告与功能建议
 - [Contributing](CONTRIBUTING.md) — 贡献指南
 - [Security](SECURITY.md) — 安全漏洞报告
 - [Code of Conduct](CODE_OF_CONDUCT.md) — 行为准则

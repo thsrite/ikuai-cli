@@ -9,7 +9,8 @@ package webapi
 
 import (
 	"bytes"
-	"crypto/md5"
+	"context"
+	"crypto/md5" //nolint:gosec // the iKuai web login protocol requires md5; not used for security here
 	"crypto/tls"
 	"encoding/base64"
 	"encoding/hex"
@@ -25,7 +26,7 @@ import (
 
 const (
 	envUser     = "IKUAI_CLI_WEB_USER"
-	envPassword = "IKUAI_CLI_WEB_PASSWORD"
+	envPassword = "IKUAI_CLI_WEB_PASSWORD" //nolint:gosec // environment variable name, not a credential
 	pageSize    = 1000
 )
 
@@ -92,11 +93,16 @@ func (c *Client) post(path string, payload interface{}) (map[string]interface{},
 	if err != nil {
 		return nil, err
 	}
-	resp, err := c.HTTP.Post(c.BaseURL+path, "application/json", bytes.NewReader(body))
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, c.BaseURL+path, bytes.NewReader(body))
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := c.HTTP.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("cannot reach iKuai web management: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("iKuai web management returned HTTP %d", resp.StatusCode)
 	}
@@ -112,7 +118,7 @@ func (c *Client) Login() error {
 	if c.loggedIn {
 		return nil
 	}
-	sum := md5.Sum([]byte(c.Password))
+	sum := md5.Sum([]byte(c.Password)) //nolint:gosec // required by the iKuai web login protocol
 	data, err := c.post("/Action/login", map[string]string{
 		"username": c.Username,
 		"passwd":   hex.EncodeToString(sum[:]),
