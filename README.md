@@ -10,6 +10,13 @@ A CLI for iKuai routers — manage network, users, VPN, firewall and more from t
 
 [中文文档](README_CN.md)
 
+> **Fork note.** This is [thsrite/ikuai-cli](https://github.com/thsrite/ikuai-cli), maintained
+> separately from [ikuaidev/ikuai-cli](https://github.com/ikuaidev/ikuai-cli) (MIT). Additions:
+> `routing diagnose` (kernel leftover routes, routing loops), `vm`, automatic backups with
+> `backup restore`, read-back checks after routing writes, next-hop five-tuple rules without
+> `--interface`, and inverted matches shown in five-tuple lists. `vm` and `routing diagnose` use
+> the router's web management API (`IKUAI_CLI_WEB_USER` / `IKUAI_CLI_WEB_PASSWORD`).
+
 ## Installation
 
 **macOS / Linux:**

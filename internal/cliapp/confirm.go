@@ -29,3 +29,19 @@ func ConfirmDelete(stdout, stderr io.Writer, resource, id string, yes bool) erro
 	}
 	return nil
 }
+
+// Confirm asks "<prompt> [y/N]" in a terminal; without one it requires --yes.
+func Confirm(stdout interface{ Write([]byte) (int, error) }, prompt string, yes bool) error {
+	if yes {
+		return nil
+	}
+	if f, ok := stdout.(*os.File); !ok || !term.IsTerminal(int(f.Fd())) {
+		return &ValidationError{Message: "this operation requires --yes in non-interactive mode"}
+	}
+	_, _ = fmt.Fprintf(stdout, "%s [y/N] ", prompt)
+	ans, _ := bufio.NewReader(os.Stdin).ReadString('\n')
+	if !strings.HasPrefix(strings.TrimSpace(strings.ToLower(ans)), "y") {
+		return fmt.Errorf("aborted")
+	}
+	return nil
+}

@@ -197,7 +197,7 @@ func TestStaticGetUsesYAMLEndpoint(t *testing.T) {
 }
 
 func TestDomainUpdateReadsCurrentAndSendsFullJSONBody(t *testing.T) {
-	t.Parallel()
+	t.Setenv("IKUAI_CLI_BACKUP_DIR", t.TempDir())
 
 	var out bytes.Buffer
 	requests := 0
@@ -211,12 +211,12 @@ func TestDomainUpdateReadsCurrentAndSendsFullJSONBody(t *testing.T) {
 				t.Fatalf("path = %q, want %q", req.URL.Path, "/api/v4.0/routing/domain-rules/7")
 			}
 			switch requests {
-			case 1:
+			case 1, 2: // current object for the full body, then for the backup
 				if req.Method != http.MethodGet {
 					t.Fatalf("method = %q, want %q", req.Method, http.MethodGet)
 				}
 				return jsonResponse(`{"code":0,"message":"Success","data":{"id":7,"tagname":"old-domain","enabled":"yes","comment":"","interface":"wan1","prio":31,"domain":{"custom":["old.example"],"object":{}},"src_addr":{"custom":{},"object":{}},"time":{"custom":[{"type":"weekly","weekdays":"1234567","start_time":"00:00","end_time":"23:59","comment":""}],"object":{}}}}`), nil
-			case 2:
+			case 3:
 				if req.Method != http.MethodPut {
 					t.Fatalf("method = %q, want %q", req.Method, http.MethodPut)
 				}
@@ -249,6 +249,11 @@ func TestDomainUpdateReadsCurrentAndSendsFullJSONBody(t *testing.T) {
 					t.Fatalf("domain.object = %#v, want empty array", domain["object"])
 				}
 				return jsonResponse(`{"code":0,"message":"success"}`), nil
+			case 4: // read back after the write
+				if req.Method != http.MethodGet {
+					t.Fatalf("method = %q, want %q", req.Method, http.MethodGet)
+				}
+				return jsonResponse(`{"code":0,"data":{"id":7,"tagname":"new-domain","comment":"changed","interface":"wan1"}}`), nil
 			default:
 				t.Fatalf("unexpected request %d", requests)
 			}
@@ -261,8 +266,8 @@ func TestDomainUpdateReadsCurrentAndSendsFullJSONBody(t *testing.T) {
 	if err := cmd.Execute(); err != nil {
 		t.Fatalf("Execute() error = %v", err)
 	}
-	if requests != 2 {
-		t.Fatalf("requests = %d, want 2", requests)
+	if requests != 4 {
+		t.Fatalf("requests = %d, want 4 (read, backup, write, read back)", requests)
 	}
 }
 

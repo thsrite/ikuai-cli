@@ -35,6 +35,15 @@ ikuai-cli auth status --format json
 
 > **Priority:** Session file > Environment variables > None.
 
+`vm` and `routing diagnose` also need the router's web management account, because the
+local REST API has no VM or kernel routing-table endpoints. It is read from the environment
+only and never saved:
+
+```bash
+export IKUAI_CLI_WEB_USER=admin
+export IKUAI_CLI_WEB_PASSWORD=<password>
+```
+
 ## Output Modes
 
 | Flag | Mode | Use case |
@@ -61,7 +70,9 @@ ikuai-cli auth status --format json
 | Log | [log.md](skills/log.md) | System/DHCP/PPPoE/auth/ARP logs |
 | Objects | [objects.md](skills/objects.md) | IP/IPv6/MAC/port/protocol/domain/time objects |
 | QoS | [qos.md](skills/qos.md) | IP/MAC bandwidth control |
-| Routing | [routing.md](skills/routing.md) | Static routes, stream shunting |
+| Routing | [routing.md](skills/routing.md) | Static routes, stream shunting, `diagnose` (leftover routes, loops) |
+| VM | [vm.md](skills/vm.md) | Virtual machines: list, start, stop |
+| Backup | [backup.md](skills/backup.md) | Objects saved before update/toggle/delete; restore |
 | Wireless | [wireless.md](skills/wireless.md) | Blacklist, VLAN, AC management |
 | Advanced | [advanced.md](skills/advanced.md) | FTP, HTTP, Samba, SNMPD |
 | Batch | [batch.md](skills/batch.md) | Multi-command workflows |
@@ -77,6 +88,17 @@ ikuai-cli <resource> <action> [args] [flags]
 - Write: `ikuai-cli network dhcp create --name "Office" --interface lan1 --addr-pool 192.168.1.100-200`
 - Write (escape hatch): `ikuai-cli network dns set --data '{"key":"value"}'`
 - REPL: `ikuai-cli` (interactive shell)
+
+## Write Safety
+
+- Use `--dry-run` first: it prints the request without sending it.
+- `update` reads the current object and sends it whole with your changes (omitted fields would
+  otherwise be reset).
+- Routing `update`, `toggle` and `delete` save the object to `~/.ikuai-cli/backups` first
+  (path printed on stderr); `backup restore FILE` puts it back.
+- After a routing `update`/`toggle` the object is read back; fields the router did not keep are
+  printed as `warning: readback ...` on stderr. Treat those as a failed change.
+- Destructive commands need `--yes` when not run in a terminal.
 
 ## Error Handling
 

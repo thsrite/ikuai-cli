@@ -13,6 +13,7 @@ import (
 	advancedcmd "github.com/ikuaidev/ikuai-cli/internal/cmd/advanced"
 	authcmd "github.com/ikuaidev/ikuai-cli/internal/cmd/auth"
 	authservercmd "github.com/ikuaidev/ikuai-cli/internal/cmd/authserver"
+	backupcmd "github.com/ikuaidev/ikuai-cli/internal/cmd/backup"
 	completioncmd "github.com/ikuaidev/ikuai-cli/internal/cmd/completion"
 	logcmd "github.com/ikuaidev/ikuai-cli/internal/cmd/log"
 	monitorcmd "github.com/ikuaidev/ikuai-cli/internal/cmd/monitor"
@@ -24,6 +25,7 @@ import (
 	systemcmd "github.com/ikuaidev/ikuai-cli/internal/cmd/system"
 	userscmd "github.com/ikuaidev/ikuai-cli/internal/cmd/users"
 	versioncmd "github.com/ikuaidev/ikuai-cli/internal/cmd/version"
+	vmcmd "github.com/ikuaidev/ikuai-cli/internal/cmd/vm"
 	vpncmd "github.com/ikuaidev/ikuai-cli/internal/cmd/vpn"
 	wirelesscmd "github.com/ikuaidev/ikuai-cli/internal/cmd/wireless"
 	"github.com/ikuaidev/ikuai-cli/internal/output"
@@ -231,6 +233,8 @@ func init() {
 	rootCmd.AddCommand(objectscmd.New(app))
 	rootCmd.AddCommand(qoscmd.New(app))
 	rootCmd.AddCommand(routingcmd.New(app))
+	rootCmd.AddCommand(vmcmd.New(app))
+	rootCmd.AddCommand(backupcmd.New(app))
 	rootCmd.AddCommand(vpncmd.New(app))
 	rootCmd.AddCommand(userscmd.New(app))
 	rootCmd.AddCommand(logcmd.New(app))

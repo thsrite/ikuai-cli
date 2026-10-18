@@ -2,6 +2,7 @@ package routing
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
 
 	"github.com/ikuaidev/ikuai-cli/internal/cliapp"
@@ -34,7 +35,7 @@ var flagDescs = map[string]string{
 	"src-addr":     "Source address (comma-separated)",
 	"src-addr-inv": "Invert source address match (0/1)",
 	"src-port":     "Source port (comma-separated)",
-	"type":         "Forwarding type (0=WAN, 1=LAN)",
+	"type":         "Forwarding type (0=WAN line via --interface, 1=next-hop gateway via --nexthop)",
 	// stream l7
 	"app-proto": "App protocol (comma-separated)",
 	// stream load-balance
@@ -106,6 +107,8 @@ var (
 		"src_addr_inv": 0,
 		"dst_addr_inv": 0,
 		"protocol":     "any",
+		"interface":    "",
+		"nexthop":      "",
 		"src_addr":     map[string]interface{}{"custom": []interface{}{}, "object": []interface{}{}},
 		"dst_addr":     map[string]interface{}{"custom": []interface{}{}, "object": []interface{}{}},
 		"src_port":     map[string]interface{}{"custom": []interface{}{}, "object": []interface{}{}},
@@ -195,7 +198,7 @@ func New(app *cliapp.Runtime) *cobra.Command {
 		Short: "Routing & traffic shunting",
 	}
 
-	routingCmd.AddCommand(staticGroup(app))
+	routingCmd.AddCommand(staticGroup(app), diagnoseCmd(app))
 
 	streamCmd := &cobra.Command{Use: "stream", Short: "Traffic shunting rules"}
 	streamCmd.AddCommand(
@@ -210,8 +213,10 @@ func New(app *cliapp.Runtime) *cobra.Command {
 			fieldMap:            fiveTupleFieldMap,
 			addrFields:          fiveTupleAddrFields,
 			createDefaults:      fiveTupleDefaults,
-			defaultColumns:      []string{"id", "tagname", "src_addr", "dst_addr", "protocol", "dst_port", "interface", "prio", "enabled"},
-			requiredCreateFlags: []string{"name", "interface"},
+			defaultColumns:      []string{"id", "tagname", "src", "dst", "protocol", "dst_port", "interface", "nexthop", "prio", "enabled"},
+			requiredCreateFlags: []string{"name"},
+			validateCreate:      fiveTupleCreateCheck,
+			listTransform:       addAddressDisplay,
 		}),
 		ruleGroup(app, "l7", "L7 application protocol stream rules", "routing/app-protocols", ruleGroupOpts{
 			fieldMap:            l7FieldMap,
@@ -299,7 +304,7 @@ func staticGroup(app *cliapp.Runtime) *cobra.Command {
 	updateCmd := writeCmd(app, "update ID", "Update a static route", true, staticFieldMap, nil, nil, "routing/static-routes",
 		func(body interface{}, id string) (json.RawMessage, error) {
 			return app.APIClient.Put(cliapp.APIBase+"/routing/static-routes/"+id, body)
-		})
+		}, "routing/static-routes")
 
 	toggleFieldMap := map[string]string{"enabled": "enabled"}
 	group.AddCommand(
@@ -310,7 +315,7 @@ func staticGroup(app *cliapp.Runtime) *cobra.Command {
 		writeCmd(app, "toggle ID", "Enable/disable a static route", true, toggleFieldMap, nil, nil, "",
 			func(body interface{}, id string) (json.RawMessage, error) {
 				return app.APIClient.Patch(cliapp.APIBase+"/routing/static-routes/"+id, body)
-			}),
+			}, "routing/static-routes"),
 		deleteByIDCmd(app, "delete ID", "Delete a static route", "/routing/static-routes/"),
 	)
 	return group
@@ -322,6 +327,10 @@ type ruleGroupOpts struct {
 	createDefaults      map[string]interface{}
 	defaultColumns      []string
 	requiredCreateFlags []string
+	// validateCreate checks flag combinations RequireFlags cannot express.
+	validateCreate func(cmd *cobra.Command) error
+	// listTransform adds display-only fields to listed rows.
+	listTransform func(row map[string]interface{})
 }
 
 func ruleGroup(app *cliapp.Runtime, use, short, apiPath string, opts ruleGroupOpts) *cobra.Command {
@@ -343,6 +352,9 @@ func ruleGroup(app *cliapp.Runtime, use, short, apiPath string, opts ruleGroupOp
 			if err != nil {
 				return err
 			}
+			if opts.listTransform != nil {
+				raw = transformRows(raw, opts.listTransform)
+			}
 			app.PrintRaw(raw)
 			return nil
 		},
@@ -360,6 +372,11 @@ func ruleGroup(app *cliapp.Runtime, use, short, apiPath string, opts ruleGroupOp
 			if err := cliapp.RequireFlags(cmd, opts.requiredCreateFlags...); err != nil {
 				return err
 			}
+			if opts.validateCreate != nil {
+				if err := opts.validateCreate(cmd); err != nil {
+					return err
+				}
+			}
 			return origRunE(cmd, args)
 		}
 	}
@@ -367,12 +384,12 @@ func ruleGroup(app *cliapp.Runtime, use, short, apiPath string, opts ruleGroupOp
 	updateCmd := writeCmd(app, "update ID", "Update a "+use+" rule", true, opts.fieldMap, opts.addrFields, nil, apiPath,
 		func(body interface{}, id string) (json.RawMessage, error) {
 			return app.APIClient.Put(cliapp.APIBase+"/"+apiPath+"/"+id, body)
-		})
+		}, apiPath)
 	toggleFieldMap := map[string]string{"enabled": "enabled"}
 	toggleCmd := writeCmd(app, "toggle ID", "Enable/disable a "+use+" rule", true, toggleFieldMap, nil, nil, "",
 		func(body interface{}, id string) (json.RawMessage, error) {
 			return app.APIClient.Patch(cliapp.APIBase+"/"+apiPath+"/"+id, body)
-		})
+		}, apiPath)
 
 	grp.AddCommand(
 		listCmd,
@@ -418,6 +435,11 @@ func deleteByIDCmd(app *cliapp.Runtime, use, short, apiPath string) *cobra.Comma
 			if err := cliapp.ConfirmDelete(app.Stdout, app.Stderr, resource, args[0], yes); err != nil {
 				return err
 			}
+			if !app.APIClient.DryRun {
+				if err := backupObject(app, strings.Trim(apiPath, "/"), args[0]); err != nil {
+					return err
+				}
+			}
 			raw, err := app.APIClient.Delete(cliapp.APIBase + apiPath + args[0])
 			if err != nil {
 				return err
@@ -437,7 +459,7 @@ type callWithBody func(body interface{}, id string) (json.RawMessage, error)
 
 // writeCmd builds a create/update/toggle command with semantic flags, addrFields, and defaults.
 // --data is kept as escape hatch for complex cases.
-func writeCmd(app *cliapp.Runtime, use, short string, withID bool, fieldMap map[string]string, addrFields map[string]string, defaults map[string]interface{}, fullUpdatePath string, fn callWithBody) *cobra.Command {
+func writeCmd(app *cliapp.Runtime, use, short string, withID bool, fieldMap map[string]string, addrFields map[string]string, defaults map[string]interface{}, fullUpdatePath string, fn callWithBody, backupPath ...string) *cobra.Command {
 	c := &cobra.Command{Use: use, Short: short}
 	if use == "create" {
 		c.Aliases = []string{"new"}
@@ -510,6 +532,18 @@ func writeCmd(app *cliapp.Runtime, use, short string, withID bool, fieldMap map[
 				"object": []interface{}{},
 			}
 		}
+		// Fields the user asked for, checked against the router after the write.
+		requested := map[string]interface{}{}
+		for k := range dataKeys(data) {
+			requested[k] = body[k]
+		}
+		for _, fields := range []map[string]string{fieldMap, addrFields} {
+			for flagName, apiField := range fields {
+				if f := cmd.Flags().Lookup(flagName); f != nil && f.Changed {
+					requested[apiField] = body[apiField]
+				}
+			}
+		}
 		if withID && fullUpdatePath != "" {
 			body, err = fullUpdateBody(app, fullUpdatePath, args[0], body)
 			if err != nil {
@@ -520,14 +554,68 @@ func writeCmd(app *cliapp.Runtime, use, short string, withID bool, fieldMap map[
 		if withID {
 			id = args[0]
 		}
+		resource := ""
+		if withID && len(backupPath) > 0 {
+			resource = backupPath[0]
+		}
+		if resource != "" && !app.APIClient.DryRun {
+			if err := backupObject(app, resource, id); err != nil {
+				return err
+			}
+		}
 		raw, err := fn(body, id)
 		if err != nil {
 			return err
 		}
 		app.PrintRaw(raw)
+		if resource != "" && !app.APIClient.DryRun {
+			verifyObject(app, resource, id, requested)
+		}
 		return nil
 	}
 	return c
+}
+
+func dataKeys(data string) map[string]interface{} {
+	keys := map[string]interface{}{}
+	_ = json.Unmarshal([]byte(data), &keys)
+	return keys
+}
+
+// backupObject saves apiPath/id before it is changed or deleted, so it can be
+// put back with "ikuai-cli backup restore".
+func backupObject(app *cliapp.Runtime, apiPath, id string) error {
+	raw, err := app.APIClient.Get(cliapp.APIBase+"/"+apiPath+"/"+id, nil)
+	if err != nil {
+		return fmt.Errorf("read %s/%s for backup: %w", apiPath, id, err)
+	}
+	record, ok := cliapp.RecordFromGet(raw)
+	if !ok {
+		return &cliapp.ValidationError{Message: "unexpected get response; not changing an object that cannot be backed up"}
+	}
+	data, _ := json.Marshal(record)
+	file, err := cliapp.SaveBackup(apiPath, id, data)
+	if err != nil {
+		return fmt.Errorf("save backup: %w", err)
+	}
+	_, _ = fmt.Fprintf(app.Stderr, "backup: %s\n", file)
+	return nil
+}
+
+// verifyObject reads apiPath/id back and warns about requested fields the router did not keep.
+func verifyObject(app *cliapp.Runtime, apiPath, id string, requested map[string]interface{}) {
+	raw, err := app.APIClient.Get(cliapp.APIBase+"/"+apiPath+"/"+id, nil)
+	if err != nil {
+		_, _ = fmt.Fprintf(app.Stderr, "warning: could not read %s/%s back: %v\n", apiPath, id, err)
+		return
+	}
+	record, ok := cliapp.RecordFromGet(raw)
+	if !ok {
+		return
+	}
+	for _, problem := range cliapp.Mismatches(requested, record) {
+		_, _ = fmt.Fprintf(app.Stderr, "warning: readback %s\n", problem)
+	}
 }
 
 func fullUpdateBody(app *cliapp.Runtime, apiPath, id string, updates map[string]interface{}) (map[string]interface{}, error) {
